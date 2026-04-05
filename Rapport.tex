@@ -1,103 +1,200 @@
-\documentclass[11pt]{article}
+\documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amsfonts,amssymb}
 \usepackage{graphicx}
 \usepackage{geometry}
-\geometry{margin=2.5cm}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{mdframed}
+\usepackage{listings}
+\geometry{margin=2.5cm, top=3cm, bottom=3cm, headheight=15pt}
 
-%================ PAGE DE GARDE =================
+% Colors
+\definecolor{mainblue}{RGB}{0,74,127}
+\definecolor{accentblue}{RGB}{0,120,200}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{codegray}{RGB}{240,240,240}
+\definecolor{darkgray}{RGB}{80,80,80}
+
+% Hyperref config
+\hypersetup{
+    colorlinks=true,
+    linkcolor=mainblue,
+    urlcolor=accentblue,
+    citecolor=mainblue,
+    pdftitle={Rapport des TPs - Réalité Augmentée From Scratch},
+    pdfauthor={DIFFO KENNE GARNEL},
+}
+
+% Section title formatting
+\titleformat{\section}{\large\bfseries\color{mainblue}}{}{0em}{\thesection\quad}[\vspace{-0.3em}\rule{\textwidth}{0.8pt}]
+\titleformat{\subsection}{\normalsize\bfseries\color{accentblue}}{}{0em}{\thesubsection\quad}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{darkgray}}{}{0em}{\thesubsubsection\quad}
+
+\titlespacing*{\section}{0pt}{1.5em}{0.8em}
+\titlespacing*{\subsection}{0pt}{1em}{0.4em}
+\titlespacing*{\subsubsection}{0pt}{0.8em}{0.3em}
+
+% Header/footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{darkgray}Réalité Augmentée From Scratch}
+\fancyhead[R]{\small\color{darkgray}DIFFO KENNE GARNEL — 24P816}
+\fancyfoot[C]{\small\color{darkgray}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\headrule}{\color{mainblue}\hrule width\headwidth height\headrulewidth}
+
+% Listings style
+\lstset{
+    backgroundcolor=\color{codegray},
+    basicstyle=\ttfamily\small,
+    frame=single,
+    framerule=0.4pt,
+    rulecolor=\color{accentblue},
+    breaklines=true,
+    numbers=none,
+    xleftmargin=8pt,
+    xrightmargin=4pt,
+    aboveskip=6pt,
+    belowskip=6pt,
+}
+
+% Framed environment for key formulas
+\mdfdefinestyle{formulabox}{
+    backgroundcolor=lightgray,
+    linecolor=accentblue,
+    linewidth=1pt,
+    leftmargin=0pt,
+    rightmargin=0pt,
+    innerleftmargin=10pt,
+    innerrightmargin=10pt,
+    innertopmargin=8pt,
+    innerbottommargin=8pt,
+}
+
 \begin{document}
+\thispagestyle{empty}
 
+% ============================================================
+%  PAGE DE GARDE
+% ============================================================
 \begin{titlepage}
     \centering
-    \vspace*{2cm}
+    \vspace*{1.5cm}
 
-    {\LARGE \textbf{RAPPORT DES TPs}}\\[0.5cm]
-    {\Large RÉALITÉ AUGMENTÉE FROM SCRATCH}\\[1.5cm]
+    % Top rule
+    {\color{mainblue}\rule{\textwidth}{2pt}}\\[0.4cm]
 
-    \rule{\textwidth}{0.5pt}\\[0.5cm]
-    {\large \textit{Stabilité numérique, algèbre linéaire et pipeline graphique}}\\[0.5cm]
-    \rule{\textwidth}{0.5pt}\\[2cm]
+    {\fontsize{26}{32}\selectfont\bfseries\color{mainblue} RAPPORT DES TPs}\\[0.3cm]
+    {\large\bfseries\color{accentblue} RÉALITÉ AUGMENTÉE FROM SCRATCH}\\[0.5cm]
 
-    \begin{flushleft}
-    \textbf{UE :} Coder pour la VR, l'XR et l'AR 2\\
-    \textbf{Étudiant :} DIFFO KENNE GARNEL\\
-    \textbf{Matricule :} 24P816\\
-    \textbf{Université :} ENSPY\\
-    \textbf{Date :} 03 AVRIL 2026\\
-    \end{flushleft}
+    {\color{mainblue}\rule{\textwidth}{2pt}}\\[1.2cm]
+
+    {\large\itshape\color{darkgray} Stabilité numérique, algèbre linéaire et pipeline graphique}\\[2cm]
+
+    % Info block
+    \begin{mdframed}[style=formulabox]
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{@{}ll}
+        \textbf{UE} & Coder pour la VR, l'XR et l'AR 2 \\
+        \textbf{Étudiant} & DIFFO KENNE GARNEL \\
+        \textbf{Matricule} & 24P816 \\
+        \textbf{Établissement} & ENSPY \\
+        \textbf{Date} & 03 Avril 2026 \\
+    \end{tabular}
+    \end{mdframed}
 
     \vfill
+
+    {\small\color{darkgray} Module NkMath — Semaines 1 à 4}\\[0.5cm]
+    {\color{mainblue}\rule{\textwidth}{1pt}}
 \end{titlepage}
 
+\newpage
 \tableofcontents
 \newpage
 
+% ============================================================
 \section{Introduction}
-Ce rapport présente l'ensemble des travaux pratiques (TPs) réalisés dans le cadre du cours \textit{Réalité Augmentée from Scratch}, couvrant les quatre premières semaines du module NkMath. Les objectifs principaux étaient de construire une bibliothèque mathématique complète en C++17 from scratch, sans utiliser de bibliothèques tierces, en se concentrant sur :
+% ============================================================
 
-\begin{itemize}
-\item La stabilité numérique et la représentation IEEE 754 des flottants (Semaine 1)
-\item Les structures vectorielles (Vec2d, Vec3d, Vec4d) et l'algèbre linéaire de base (Semaine 2)
-\item Les matrices 4x4, transformations affines et inversion numérique (Semaine 3)
-\item Les quaternions, interpolation sphérique (SLERP) et animation (Semaine 4)
+Ce rapport présente l'ensemble des travaux pratiques réalisés dans le cadre du cours \textit{Réalité Augmentée from Scratch}, couvrant les quatre premières semaines du module \textbf{NkMath}. L'objectif principal est de construire une bibliothèque mathématique complète en C++17 from scratch, sans dépendances tierces, en se concentrant sur les thèmes suivants :
+
+\begin{itemize}[leftmargin=2em, itemsep=4pt]
+    \item \textbf{Semaine 1} — Stabilité numérique et représentation IEEE 754 des flottants
+    \item \textbf{Semaine 2} — Structures vectorielles (Vec2d, Vec3d, Vec4d) et algèbre linéaire de base
+    \item \textbf{Semaine 3} — Matrices 4$\times$4, transformations affines et inversion numérique
+    \item \textbf{Semaine 4} — Quaternions, interpolation sphérique (SLERP) et animation
 \end{itemize}
 
-Chaque section détaille les concepts théoriques, les implémentations pratiques et les tests unitaires correspondants, avec plus de 40 tests couvrant la robustesse numérique et les cas limites.
+Chaque section détaille les concepts théoriques, les implémentations pratiques et les tests unitaires correspondants. L'ensemble est couvert par plus de \textbf{40 tests} validant la robustesse numérique et les cas limites.
 
 \newpage
 
+% ============================================================
 \section{Précision Numérique}
+% ============================================================
 
 \subsection{Représentation IEEE 754 des flottants}
 
 Un nombre flottant IEEE 754 simple précision (32 bits) est structuré comme suit :
-\begin{itemize}
-\item Bit 31 : Signe (0 = positif, 1 = négatif)
-\item Bits 30-23 : Exposant biaisé (8 bits, biais = 127)
-\item Bits 22-0 : Mantisse (23 bits, avec bit implicite 1)
+
+\begin{itemize}[itemsep=2pt]
+    \item \textbf{Bit 31} : Signe (0 = positif, 1 = négatif)
+    \item \textbf{Bits 30–23} : Exposant biaisé (8 bits, biais $= 127$)
+    \item \textbf{Bits 22–0} : Mantisse (23 bits, avec bit implicite 1)
 \end{itemize}
 
 La valeur représentée est :
-\[
-(-1)^s \times 2^{(e-127)} \times (1 + m \times 2^{-23})
-\]
+\begin{equation}
+(-1)^{s} \times 2^{(e-127)} \times \left(1 + m \times 2^{-23}\right)
+\end{equation}
 
 où $s$ est le bit de signe, $e$ l'exposant biaisé, et $m$ la mantisse.
 
 \subsubsection{Pourquoi 0.1f n'est pas représentable exactement}
 
-$0.1_{10} = 0.0001100110011001100110011001100..._2$ en binaire. La mantisse de 23 bits ne peut représenter que les 23 premiers bits après la virgule, conduisant à une approximation :
+$0.1_{10} = 0.000\overline{1100}_2$ en binaire. La mantisse de 23 bits ne peut représenter que les 23 premiers bits après la virgule, conduisant à l'approximation :
 \[
 0.1 \approx 0.100000001490116119384765625
 \]
-
 Cette erreur d'arrondi est la source de nombreux problèmes numériques dans les calculs AR.
 
 \subsubsection{Valeurs spéciales IEEE 754}
 
-Le standard définit des patterns spéciaux :
-\begin{itemize}
-\item $\pm 0$ : exposant = 0, mantisse = 0
-\item $\pm \infty$ : exposant = 255, mantisse = 0
-\item NaN : exposant = 255, mantisse $\neq$ 0
-\item Subnormaux : exposant = 0, mantisse $\neq$ 0 (très petits nombres)
-\end{itemize}
-
-NaN est contagieux : toute opération avec NaN produit NaN. Le test correct utilise \texttt{std::isnan()}.
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{llll}
+\toprule
+\textbf{Valeur} & \textbf{Exposant} & \textbf{Mantisse} & \textbf{Remarque} \\
+\midrule
+$\pm 0$      & 0   & 0        & Zéros signés \\
+$\pm \infty$ & 255 & 0        & Résultat d'overflow \\
+NaN          & 255 & $\neq 0$ & Contagieux, tester avec \texttt{std::isnan()} \\
+Subnormal    & 0   & $\neq 0$ & Très petits nombres \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \subsection{Epsilon machine et ULP}
 
-L'epsilon machine $\epsilon$ est la plus petite valeur telle que $1.0 + \epsilon \neq 1.0$ :
+L'epsilon machine $\varepsilon$ est la plus petite valeur telle que $1.0 + \varepsilon \neq 1.0$ :
 \[
-\epsilon_{float} \approx 1.19 \times 10^{-7}, \quad \epsilon_{double} \approx 2.22 \times 10^{-16}
+\varepsilon_{\text{float}} \approx 1.19 \times 10^{-7}, \qquad \varepsilon_{\text{double}} \approx 2.22 \times 10^{-16}
 \]
 
-L'ULP (Unit in the Last Place) mesure l'espacement entre flottants consécutifs. Il varie avec la magnitude :
-\begin{itemize}
-\item Près de 1.0 : ULP $\approx 1.19 \times 10^{-7}$
-\item Près de 1000.0 : ULP $\approx 1.22 \times 10^{-4}$
+L'ULP (\textit{Unit in the Last Place}) mesure l'espacement entre flottants consécutifs. Il varie avec la magnitude :
+
+\begin{itemize}[itemsep=2pt]
+    \item Près de $1.0$ : ULP $\approx 1.19 \times 10^{-7}$
+    \item Près de $1000.0$ : ULP $\approx 1.22 \times 10^{-4}$
 \end{itemize}
 
 \subsection{Erreurs d'arrondi et algorithmes stables}
@@ -106,345 +203,332 @@ L'ULP (Unit in the Last Place) mesure l'espacement entre flottants consécutifs.
 
 La soustraction de deux nombres presque égaux perd des bits significatifs :
 \[
-a = 1234567.89, \quad b = 1234567.00, \quad a - b = 0.89 \approx 0.875
+a = 1\,234\,567.89,\quad b = 1\,234\,567.00 \implies a - b = 0.89 \approx 0.875
 \]
 
 \subsubsection{Sommation de Kahan}
 
-L'algorithme compense les erreurs accumulées :
+L'algorithme compense les erreurs accumulées à chaque étape :
 \begin{align}
 y &= x_i - c \\
 t &= s + y \\
 c &= (t - s) - y \\
 s &= t
 \end{align}
-
-où $c$ est la compensation.
+où $c$ est le terme de compensation.
 
 \subsubsection{Variance : méthode naïve vs Welford}
 
 La méthode naïve :
 \[
-\sigma^2 = \frac{\sum x_i^2 - (\sum x_i)^2/n}{n-1}
+\sigma^2 = \frac{\displaystyle\sum x_i^2 - \left(\sum x_i\right)^2/n}{n-1}
 \]
-est instable numériquement.
+est instable numériquement (peut produire une variance négative).
 
-La méthode de Welford maintient la précision :
+La méthode de Welford maintient la précision en une seule passe :
 \begin{align}
-\delta &= x_i - \bar{x}_{i-1} \\
+\delta   &= x_i - \bar{x}_{i-1} \\
 \bar{x}_i &= \bar{x}_{i-1} + \delta/i \\
-M2_i &= M2_{i-1} + \delta(x_i - \bar{x}_i)
+M2_i     &= M2_{i-1} + \delta\,(x_i - \bar{x}_i)
 \end{align}
 
 \subsection{Résultats expérimentaux}
 
-Tests sur 1 million d'additions de 0.1f :
-\begin{itemize}
-\item \texttt{std::accumulate} : 100011.55 (erreur 11.55)
-\item Kahan : 100000.00 (exact)
-\end{itemize}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Méthode} & \textbf{Résultat} ($10^6$ additions de 0.1f) & \textbf{Erreur} \\
+\midrule
+\texttt{std::accumulate} & 100\,011.55 & $+11.55$ \\
+Kahan & 100\,000.00 & $\approx 0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-Variance sur $[10^8, 10^8, 1.0, 2.0]$ :
-\begin{itemize}
-\item Naïve : peut être négative
-\item Welford : stable
-\end{itemize}
+Sur le jeu $\{10^8, 10^8, 1.0, 2.0\}$, la méthode naïve peut retourner une variance négative, tandis que Welford reste stable.
+
 \newpage
 
+% ============================================================
 \section{Vecteurs et Algèbre Linéaire}
+% ============================================================
 
 \subsection{Vec2d : Vecteurs 2D}
 
-Implémentation avec opérateurs arithmétiques, accès par index et fonctions utilitaires.
+Implémentation avec opérateurs arithmétiques complets, accès par index et fonctions utilitaires.
 
 \subsubsection{Produit scalaire}
 \[
 \mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y
 \]
 
-\subsubsection{Produit vectoriel 2D}
+\subsubsection{Produit vectoriel 2D (scalaire)}
 \[
 \mathbf{a} \times \mathbf{b} = a_x b_y - a_y b_x
 \]
-
-Produit l'aire orientée du parallélogramme.
+Donne l'aire orientée du parallélogramme défini par $\mathbf{a}$ et $\mathbf{b}$.
 
 \subsubsection{Normalisation}
 \[
-\mathbf{\hat{u}} = \frac{\mathbf{u}}{||\mathbf{u}||}, \quad ||\mathbf{u}|| = \sqrt{u_x^2 + u_y^2}
+\hat{\mathbf{u}} = \frac{\mathbf{u}}{\|\mathbf{u}\|}, \qquad \|\mathbf{u}\| = \sqrt{u_x^2 + u_y^2}
 \]
 
 \subsection{Vec3d : Vecteurs 3D}
 
-Extension à 3 dimensions avec produit vectoriel 3D.
-
 \subsubsection{Produit vectoriel 3D}
 \[
-\mathbf{a} \times \mathbf{b} = 
+\mathbf{a} \times \mathbf{b} =
 \begin{pmatrix}
 a_y b_z - a_z b_y \\
 a_z b_x - a_x b_z \\
 a_x b_y - a_y b_x
 \end{pmatrix}
 \]
-
 Suit la règle de la main droite.
 
 \subsubsection{Orthogonalisation de Gram-Schmidt}
 
-Construction d'une base orthonormée à partir de trois vecteurs :
+Construction d'une base orthonormée $\{\mathbf{u}_1, \mathbf{u}_2, \mathbf{u}_3\}$ à partir de trois vecteurs $\mathbf{a}, \mathbf{b}, \mathbf{c}$ :
 \begin{align}
-\mathbf{u}_1 &= \frac{\mathbf{a}}{||\mathbf{a}||} \\
-\mathbf{v}_1 &= \mathbf{b} - \mathrm{proj}_{\mathbf{u}_1}(\mathbf{b}) \\
-\mathbf{u}_2 &= \frac{\mathbf{v}_1}{||\mathbf{v}_1||} \\
-\mathbf{v}_2 &= \mathbf{c} - \mathrm{proj}_{\mathbf{u}_1}(\mathbf{c}) - \mathrm{proj}_{\mathbf{u}_2}(\mathbf{c}) \\
-\mathbf{u}_3 &= \frac{\mathbf{v}_2}{||\mathbf{v}_2||}
+\mathbf{u}_1 &= \frac{\mathbf{a}}{\|\mathbf{a}\|} \\
+\mathbf{v}_1 &= \mathbf{b} - \operatorname{proj}_{\mathbf{u}_1}(\mathbf{b}), \quad \mathbf{u}_2 = \frac{\mathbf{v}_1}{\|\mathbf{v}_1\|} \\
+\mathbf{v}_2 &= \mathbf{c} - \operatorname{proj}_{\mathbf{u}_1}(\mathbf{c}) - \operatorname{proj}_{\mathbf{u}_2}(\mathbf{c}), \quad \mathbf{u}_3 = \frac{\mathbf{v}_2}{\|\mathbf{v}_2\|}
 \end{align}
-
-où $\mathrm{proj}_{\mathbf{u}}(\mathbf{v}) = (\mathbf{v} \cdot \mathbf{u}) \mathbf{u}$.
+avec $\operatorname{proj}_{\mathbf{u}}(\mathbf{v}) = (\mathbf{v} \cdot \mathbf{u})\,\mathbf{u}$.
 
 \subsubsection{Rejet orthogonal}
 \[
-\mathrm{rej}_{\mathbf{u}}(\mathbf{v}) = \mathbf{v} - \mathrm{proj}_{\mathbf{u}}(\mathbf{v})
+\operatorname{rej}_{\mathbf{u}}(\mathbf{v}) = \mathbf{v} - \operatorname{proj}_{\mathbf{u}}(\mathbf{v})
 \]
 
 \subsection{Vec4d : Coordonnées homogènes}
 
-Utilisé pour les transformations affines. Le quatrième composant $w$ permet les translations.
+Utilisées pour les transformations affines ; le quatrième composant $w$ permet d'encoder les translations dans une multiplication matricielle.
 
 \subsubsection{Projection perspective simple}
 
-Pour un point 3D $(X, Y, Z)$, projection 2D :
+Pour un point 3D $(X, Y, Z)$, la projection 2D est :
 \[
-u = f \frac{X}{Z}, \quad v = f \frac{Y}{Z}
+u = f\,\frac{X}{Z}, \qquad v = f\,\frac{Y}{Z}
 \]
-
-avec $f$ le champ de vision.
-
+avec $f$ le facteur de champ de vision.
 
 \newpage
 
+% ============================================================
 \section{Matrices et Transformations}
+% ============================================================
 
-\subsection{Matrices 4x4 homogènes}
+\subsection{Matrices 4$\times$4 homogènes}
 
-Les matrices 4x4 représentent les transformations affines 3D :
+Les matrices $4 \times 4$ représentent les transformations affines 3D sous la forme :
 \[
-\begin{pmatrix}
-\mathbf{R} & \mathbf{t} \\
-\mathbf{0} & 1
-\end{pmatrix}
+M = \begin{pmatrix} \mathbf{R} & \mathbf{t} \\ \mathbf{0}^T & 1 \end{pmatrix}
 \]
-où $\mathbf{R}$ est la rotation 3x3, $\mathbf{t}$ la translation.
+où $\mathbf{R} \in \mathbb{R}^{3\times3}$ est la rotation et $\mathbf{t} \in \mathbb{R}^3$ la translation.
 
-\subsubsection{TRS : Translation-Rotation-Scale}
+\subsubsection{Composition TRS}
 
-Composition des transformations :
+Les transformations Translation–Rotation–Scale se composent dans l'ordre :
 \[
 M = T \cdot R \cdot S
 \]
 
 \subsubsection{Décomposition TRS}
 
-Extraction des paramètres :
-\begin{itemize}
-\item Translation : colonne 4 de $M$
-\item Scale : normes des colonnes de $\mathbf{R}$
-\item Rotation : normalisation des colonnes
+Extraction des paramètres depuis $M$ :
+\begin{itemize}[itemsep=2pt]
+    \item \textbf{Translation} : colonne 4 de $M$
+    \item \textbf{Scale} : normes des colonnes de la sous-matrice $3\times3$
+    \item \textbf{Rotation} : colonnes normalisées de la sous-matrice $3\times3$
 \end{itemize}
 
-\subsubsection{Inversion de matrice}
+\subsubsection{Inversion numérique de matrice}
 
-Utilisation de l'algorithme de Gauss-Jordan avec pivot partiel. Testé sur matrices aléatoires et singulières.
+Utilisation de l'algorithme de Gauss-Jordan avec \textbf{pivot partiel} pour assurer la stabilité. Testé sur matrices aléatoires et cas singuliers.
 
 \subsubsection{Caméra LookAt}
 
-Matrice de vue à partir de eye, target, up :
+Construction de la matrice de vue depuis un triplet $(\text{eye}, \text{target}, \text{up})$ :
 \begin{align}
-\mathbf{z} &= \mathrm{normalize}(\mathrm{eye} - \mathrm{target}) \\
-\mathbf{x} &= \mathrm{normalize}(\mathrm{up} \times \mathbf{z}) \\
+\mathbf{z} &= \operatorname{normalize}(\text{eye} - \text{target}) \\
+\mathbf{x} &= \operatorname{normalize}(\text{up} \times \mathbf{z}) \\
 \mathbf{y} &= \mathbf{z} \times \mathbf{x}
 \end{align}
 
-\subsubsection{Projection perspective}
+\subsubsection{Matrice de projection perspective}
 
-Matrice de projection :
 \[
 P = \begin{pmatrix}
-\frac{f}{\mathrm{aspect}} & 0 & 0 & 0 \\
-0 & f & 0 & 0 \\
-0 & 0 & \frac{\mathrm{far+near}}{\mathrm{near-far}} & \frac{2\cdot\mathrm{far}\cdot\mathrm{near}}{\mathrm{near-far}} \\
+\dfrac{f}{\text{aspect}} & 0 & 0 & 0 \\[8pt]
+0 & f & 0 & 0 \\[6pt]
+0 & 0 & \dfrac{\text{far}+\text{near}}{\text{near}-\text{far}} & \dfrac{2\cdot\text{far}\cdot\text{near}}{\text{near}-\text{far}} \\[8pt]
 0 & 0 & -1 & 0
 \end{pmatrix}
 \]
-avec $f = \frac{1}{\tan(\theta/2)}$ et $\theta$ le FOV vertical.
-
+avec $f = \dfrac{1}{\tan(\theta/2)}$ et $\theta$ le FOV vertical.
 
 \newpage
 
+% ============================================================
 \section{Rasterisation Logicielle}
+% ============================================================
 
 \subsection{Pipeline graphique}
 
-Le pipeline implémenté comprend :
-\begin{enumerate}
-\item Transformation modèle (objet local vers monde)
-\item Transformation vue (monde vers caméra)
-\item Projection (caméra vers écran)
-\item Passage en coordonnées écran (NDC vers pixels)
+Le pipeline implémenté suit quatre étapes :
+
+\begin{enumerate}[itemsep=4pt]
+    \item \textbf{Transformation modèle} : espace objet $\to$ espace monde
+    \item \textbf{Transformation vue} : espace monde $\to$ espace caméra
+    \item \textbf{Projection} : espace caméra $\to$ NDC
+    \item \textbf{Rasterisation} : NDC $\to$ pixels écran
 \end{enumerate}
 
-\subsubsection{Transformation complète}
+La transformation complète d'un point local vers l'écran s'écrit :
 \[
-\mathbf{p}_{screen} = P \cdot V \cdot M \cdot \mathbf{p}_{local}
+\mathbf{p}_{\text{écran}} = P \cdot V \cdot M \cdot \mathbf{p}_{\text{local}}
 \]
+
+\subsection{Composants implémentés}
 
 \subsubsection{Cube unitaire}
 
-Définition des 8 sommets et 12 arêtes d'un cube centré en $(0,0,0)$.
+Définition des 8 sommets et 12 arêtes d'un cube centré en $(0, 0, 0)$.
 
-\subsubsection{Dessin d'arêtes}
+\subsubsection{Algorithme de tracé de lignes}
 
-Utilisation de l'algorithme de Bresenham pour tracer les lignes entre sommets projetés.
+Utilisation de l'algorithme de \textbf{Bresenham} pour rasteriser les arêtes entre sommets projetés.
 
-\subsubsection{Format PPM}
+\subsubsection{Format de sortie PPM}
 
 Sauvegarde au format binaire P6 :
-\begin{verbatim}
+\begin{lstlisting}
 P6
 width height
 255
-<data>
-\end{verbatim}
+<data RGB>
+\end{lstlisting}
 
-\subsubsection{Animation}
+\subsubsection{Animation par rotation}
 
 Rotation autour de l'axe Y :
 \[
 R_y(\theta) = \begin{pmatrix}
 \cos\theta & 0 & \sin\theta & 0 \\
-0 & 1 & 0 & 0 \\
--\sin\theta & 0 & \cos\theta & 0 \\
-0 & 0 & 0 & 1
+0          & 1 & 0          & 0 \\
+-\sin\theta& 0 & \cos\theta & 0 \\
+0          & 0 & 0          & 1
 \end{pmatrix}
 \]
-
-Génération de 10 frames pour simuler une rotation complète.
-
-\subsection{Tests}
-
-Nous avons implémenté plus de 40 tests couvrant :
-\begin{itemize}
-\item précision numérique
-\item opérations vectorielles
-\item matrices et inverses
-\item pipeline graphique
-\end{itemize}
-
+Génération de \textbf{10 frames} pour simuler une rotation complète à $360°$.
 
 \newpage
 
+% ============================================================
 \section{Quaternions et Animation}
+% ============================================================
 
 \subsection{Représentation des quaternions}
 
 Un quaternion représente une rotation 3D :
 \[
-\mathbf{q} = w + x\mathbf{i} + y\mathbf{j} + z\mathbf{k}
+\mathbf{q} = w + x\,\mathbf{i} + y\,\mathbf{j} + z\,\mathbf{k}
 \]
-
-avec $w^2 + x^2 + y^2 + z^2 = 1$ pour les quaternions unitaires.
+avec la contrainte d'unitarité $w^2 + x^2 + y^2 + z^2 = 1$.
 
 \subsubsection{Rotation d'un vecteur}
 \[
-\mathbf{v}' = \mathbf{q} \mathbf{v} \mathbf{q}^{-1}
+\mathbf{v}' = \mathbf{q}\,\mathbf{v}\,\mathbf{q}^{-1}
 \]
 
-\subsubsection{Conversion Quaternion vers Matrice 3x3}
+\subsubsection{Conversion quaternion $\to$ matrice $3\times3$}
 
-La matrice de rotation correspondante :
 \[
 R = \begin{pmatrix}
-1-2y^2-2z^2 & 2xy-2wz & 2xz+2wy \\
-2xy+2wz & 1-2x^2-2z^2 & 2yz-2wx \\
-2xz-2wy & 2yz+2wx & 1-2x^2-2y^2
+1-2y^2-2z^2 & 2xy-2wz     & 2xz+2wy \\
+2xy+2wz     & 1-2x^2-2z^2 & 2yz-2wx \\
+2xz-2wy     & 2yz+2wx     & 1-2x^2-2y^2
 \end{pmatrix}
 \]
 
-\subsubsection{Aller-retour Quat ↔ Mat3}
-
-Testé sur 50 cas aléatoires pour vérifier la stabilité numérique.
-
 \subsubsection{Inverse et identité}
 
-Pour un quaternion unitaire : $\mathbf{q}^{-1} = \overline{\mathbf{q}} = (w, -x, -y, -z)$
+Pour un quaternion unitaire : $\mathbf{q}^{-1} = \bar{\mathbf{q}} = (w,\,-x,\,-y,\,-z)$.
 
-Vérification : $\mathbf{q} \cdot \mathbf{q}^{-1} = 1$
+Vérification : $\mathbf{q} \cdot \mathbf{q}^{-1} = 1$.
+
+La stabilité numérique du cycle $\mathbf{q} \to R \to \mathbf{q}$ a été vérifiée sur \textbf{50 cas aléatoires}.
 
 \subsection{Interpolation sphérique (SLERP)}
 
-\subsubsection{SLERP vs LERP}
+\subsubsection{LERP vs SLERP}
 
-LERP : interpolation linéaire dans l'espace des quaternions (vitesse angulaire non constante)
-
-SLERP : interpolation sur le grand cercle (vitesse angulaire constante)
+\begin{itemize}[itemsep=3pt]
+    \item \textbf{LERP} : interpolation linéaire dans l'espace des quaternions — vitesse angulaire \textit{non constante}
+    \item \textbf{SLERP} : interpolation sur le grand cercle de $S^3$ — vitesse angulaire \textit{constante}
+\end{itemize}
 
 \subsubsection{Formule SLERP}
-\[
-\mathrm{slerp}(\mathbf{q}_1, \mathbf{q}_2, t) = \frac{\sin((1-t)\theta)}{\sin\theta} \mathbf{q}_1 + \frac{\sin(t\theta)}{\sin\theta} \mathbf{q}_2
-\]
 
-avec $\cos\theta = \mathbf{q}_1 \cdot \mathbf{q}_2$
+\[
+\operatorname{slerp}(\mathbf{q}_1, \mathbf{q}_2, t) = \frac{\sin\!\bigl((1-t)\theta\bigr)}{\sin\theta}\,\mathbf{q}_1 + \frac{\sin(t\theta)}{\sin\theta}\,\mathbf{q}_2
+\]
+avec $\cos\theta = \mathbf{q}_1 \cdot \mathbf{q}_2$.
 
 \subsubsection{Animation}
 
-Interpolation entre deux orientations sur 60 frames, avec rendu du cube en rotation.
-
+Interpolation entre deux orientations sur \textbf{60 frames}, avec rendu du cube en rotation et comparaison visuelle LERP/SLERP.
 
 \newpage
 
+% ============================================================
 \section{Tests et Validation}
+% ============================================================
 
-Le fichier \texttt{TestsDesTPs.cpp} contient 11 suites de tests couvrant l'ensemble des fonctionnalités implémentées :
+Le fichier \texttt{TestsDesTPs.cpp} contient 11 suites de tests couvrant l'ensemble des fonctionnalités :
 
-\begin{itemize}
-\item \textbf{TP1} : Inspection des flottants IEEE 754 (\texttt{inspectFloat})
-\item \textbf{TP2} : Problèmes de précision (somme Kahan, variance Welford, epsilon machine)
-\item \textbf{TP3} : Fonctions utilitaires sur flottants (33 tests : isFiniteValid, nearlyZero, approxEq, kahanSum)
-\item \textbf{TP4} : Vec2d complet (20 tests : dot product, cross product 2D, normalisation, accès index)
-\item \textbf{TP5} : Vec3d et Gram-Schmidt (16 tests : cross product 3D, orthogonalisation sur 10 triplets aléatoires)
-\item \textbf{TP6} : Projection perspective Vec4d (rendu d'un cube avec sommets projetés)
-\item \textbf{TP7} : Mat4d et inversion (10 tests sur matrices aléatoires, test de singularité)
-\item \textbf{TP8} : Rasterisation cube en rotation (10 frames d'animation)
-\item \textbf{TP9} : Décomposition TRS (20 tests sur matrices aléatoires)
-\item \textbf{TP10} : Quaternions (50 tests aller-retour Quat↔Mat3, 50 tests d'inverse)
-\item \textbf{TP11} : Animation SLERP (60 frames avec SLERP et LERP pour comparaison)
-\end{itemize}
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{cll}
+\toprule
+\textbf{Suite} & \textbf{Thème} & \textbf{Description} \\
+\midrule
+TP1  & Flottants IEEE 754        & Inspection bit-à-bit (\texttt{inspectFloat}) \\
+TP2  & Précision                 & Somme Kahan, variance Welford, epsilon machine \\
+TP3  & Utilitaires flottants     & 33 tests : isFiniteValid, nearlyZero, approxEq \\
+TP4  & Vec2d                     & 20 tests : dot, cross 2D, normalisation, accès \\
+TP5  & Vec3d / Gram-Schmidt      & 16 tests : cross 3D, ortho. sur 10 triplets aléatoires \\
+TP6  & Projection Vec4d          & Rendu d'un cube avec sommets projetés \\
+TP7  & Mat4d / Inversion         & 10 tests : matrices aléatoires et singulières \\
+TP8  & Rasterisation             & 10 frames d'animation du cube en rotation \\
+TP9  & Décomposition TRS         & 20 tests sur matrices aléatoires \\
+TP10 & Quaternions               & 50 tests $\mathbf{q}\to R\to\mathbf{q}$, 50 tests d'inverse \\
+TP11 & Animation SLERP           & 60 frames SLERP et LERP pour comparaison \\
+\bottomrule
+\end{tabular}
+\end{center}
 
+\vspace{0.5em}
+Au total, \textbf{plus de 40 assertions} couvrent les cas nominaux, les cas limites et la robustesse numérique.
+
+\newpage
+
+% ============================================================
 \section{Conclusion}
+% ============================================================
 
-Ce projet a permis de construire les fondations mathématiques essentielles pour un moteur de réalité augmentée from scratch. Les principales réalisations incluent :
+Ce projet a permis de construire les fondations mathématiques essentielles d'un moteur de réalité augmentée from scratch. Les principales réalisations sont :
 
-\begin{itemize}
-\item Une analyse approfondie de la précision numérique IEEE 754 et des algorithmes stables (Kahan, Welford)
-\item L'implémentation rigoureuse de structures vectorielles (Vec2d, Vec3d, Vec4d) avec algèbre linéaire complète
-\item Les matrices 4x4 avec inversion numérique et décomposition TRS
-\item Un pipeline de rasterisation logiciel incluant projection perspective et animation
-\item Les quaternions avec interpolation SLERP pour l'animation fluide
+\begin{itemize}[itemsep=5pt]
+    \item \textbf{Précision numérique} — Analyse approfondie de l'IEEE 754 et implémentation des algorithmes stables Kahan et Welford
+    \item \textbf{Algèbre vectorielle} — Structures Vec2d, Vec3d, Vec4d avec algèbre linéaire complète (dot, cross, Gram-Schmidt)
+    \item \textbf{Matrices 4$\times$4} — Inversion numérique par Gauss-Jordan, composition et décomposition TRS
+    \item \textbf{Pipeline graphique} — Rasterisation logicielle avec projection perspective, algorithme de Bresenham et export PPM
+    \item \textbf{Quaternions} — Représentation compacte des rotations avec interpolation SLERP pour une animation fluide
 \end{itemize}
 
-L'ensemble est validé par plus de 40 tests unitaires couvrant les cas limites et la robustesse numérique. Cette bibliothèque NkMath constitue une base solide pour les modules suivants (SVD, traitement d'image, calibration caméra).
-
-Ce projet a permis de construire les fondations mathématiques essentielles pour un moteur de réalité augmentée from scratch. Les principales réalisations incluent :
-
-\begin{itemize}
-\item Une analyse approfondie de la précision numérique IEEE 754 et des algorithmes stables (Kahan, Welford)
-\item L'implémentation rigoureuse de structures vectorielles (Vec2d, Vec3d, Vec4d) avec algèbre linéaire complète
-\item Les matrices 4x4 avec inversion numérique et décomposition TRS
-\item Un pipeline de rasterisation logiciel incluant projection perspective et animation
-\item Les quaternions avec interpolation SLERP pour l'animation fluide
-\end{itemize}
-
-L'ensemble est validé par plus de 40 tests unitaires couvrant les cas limites et la robustesse numérique. Cette bibliothèque NkMath constitue une base solide pour les modules suivants (SVD, traitement d'image, calibration caméra).
+L'ensemble est validé par plus de 40 tests unitaires couvrant les cas limites et la robustesse numérique. La bibliothèque \textbf{NkMath} constitue une base solide pour les modules suivants : SVD, traitement d'image et calibration caméra.
 
 \end{document}
