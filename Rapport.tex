@@ -1,0 +1,450 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+%================ PAGE DE GARDE =================
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+
+    {\LARGE \textbf{RAPPORT DES TPs}}\\[0.5cm]
+    {\Large RÉALITÉ AUGMENTÉE FROM SCRATCH}\\[1.5cm]
+
+    \rule{\textwidth}{0.5pt}\\[0.5cm]
+    {\large \textit{Stabilité numérique, algèbre linéaire et pipeline graphique}}\\[0.5cm]
+    \rule{\textwidth}{0.5pt}\\[2cm]
+
+    \begin{flushleft}
+    \textbf{UE :} Coder pour la VR, l'XR et l'AR 2\\
+    \textbf{Étudiant :} DIFFO KENNE GARNEL\\
+    \textbf{Matricule :} 24P816\\
+    \textbf{Université :} ENSPY\\
+    \textbf{Date :} 03 AVRIL 2026\\
+    \end{flushleft}
+
+    \vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+Ce rapport présente l'ensemble des travaux pratiques (TPs) réalisés dans le cadre du cours \textit{Réalité Augmentée from Scratch}, couvrant les quatre premières semaines du module NkMath. Les objectifs principaux étaient de construire une bibliothèque mathématique complète en C++17 from scratch, sans utiliser de bibliothèques tierces, en se concentrant sur :
+
+\begin{itemize}
+\item La stabilité numérique et la représentation IEEE 754 des flottants (Semaine 1)
+\item Les structures vectorielles (Vec2d, Vec3d, Vec4d) et l'algèbre linéaire de base (Semaine 2)
+\item Les matrices 4x4, transformations affines et inversion numérique (Semaine 3)
+\item Les quaternions, interpolation sphérique (SLERP) et animation (Semaine 4)
+\end{itemize}
+
+Chaque section détaille les concepts théoriques, les implémentations pratiques et les tests unitaires correspondants, avec plus de 40 tests couvrant la robustesse numérique et les cas limites.
+
+\newpage
+
+\section{Précision Numérique}
+
+\subsection{Représentation IEEE 754 des flottants}
+
+Un nombre flottant IEEE 754 simple précision (32 bits) est structuré comme suit :
+\begin{itemize}
+\item Bit 31 : Signe (0 = positif, 1 = négatif)
+\item Bits 30-23 : Exposant biaisé (8 bits, biais = 127)
+\item Bits 22-0 : Mantisse (23 bits, avec bit implicite 1)
+\end{itemize}
+
+La valeur représentée est :
+\[
+(-1)^s \times 2^{(e-127)} \times (1 + m \times 2^{-23})
+\]
+
+où $s$ est le bit de signe, $e$ l'exposant biaisé, et $m$ la mantisse.
+
+\subsubsection{Pourquoi 0.1f n'est pas représentable exactement}
+
+$0.1_{10} = 0.0001100110011001100110011001100..._2$ en binaire. La mantisse de 23 bits ne peut représenter que les 23 premiers bits après la virgule, conduisant à une approximation :
+\[
+0.1 \approx 0.100000001490116119384765625
+\]
+
+Cette erreur d'arrondi est la source de nombreux problèmes numériques dans les calculs AR.
+
+\subsubsection{Valeurs spéciales IEEE 754}
+
+Le standard définit des patterns spéciaux :
+\begin{itemize}
+\item $\pm 0$ : exposant = 0, mantisse = 0
+\item $\pm \infty$ : exposant = 255, mantisse = 0
+\item NaN : exposant = 255, mantisse $\neq$ 0
+\item Subnormaux : exposant = 0, mantisse $\neq$ 0 (très petits nombres)
+\end{itemize}
+
+NaN est contagieux : toute opération avec NaN produit NaN. Le test correct utilise \texttt{std::isnan()}.
+
+\subsection{Epsilon machine et ULP}
+
+L'epsilon machine $\epsilon$ est la plus petite valeur telle que $1.0 + \epsilon \neq 1.0$ :
+\[
+\epsilon_{float} \approx 1.19 \times 10^{-7}, \quad \epsilon_{double} \approx 2.22 \times 10^{-16}
+\]
+
+L'ULP (Unit in the Last Place) mesure l'espacement entre flottants consécutifs. Il varie avec la magnitude :
+\begin{itemize}
+\item Près de 1.0 : ULP $\approx 1.19 \times 10^{-7}$
+\item Près de 1000.0 : ULP $\approx 1.22 \times 10^{-4}$
+\end{itemize}
+
+\subsection{Erreurs d'arrondi et algorithmes stables}
+
+\subsubsection{Cancellation catastrophique}
+
+La soustraction de deux nombres presque égaux perd des bits significatifs :
+\[
+a = 1234567.89, \quad b = 1234567.00, \quad a - b = 0.89 \approx 0.875
+\]
+
+\subsubsection{Sommation de Kahan}
+
+L'algorithme compense les erreurs accumulées :
+\begin{align}
+y &= x_i - c \\
+t &= s + y \\
+c &= (t - s) - y \\
+s &= t
+\end{align}
+
+où $c$ est la compensation.
+
+\subsubsection{Variance : méthode naïve vs Welford}
+
+La méthode naïve :
+\[
+\sigma^2 = \frac{\sum x_i^2 - (\sum x_i)^2/n}{n-1}
+\]
+est instable numériquement.
+
+La méthode de Welford maintient la précision :
+\begin{align}
+\delta &= x_i - \bar{x}_{i-1} \\
+\bar{x}_i &= \bar{x}_{i-1} + \delta/i \\
+M2_i &= M2_{i-1} + \delta(x_i - \bar{x}_i)
+\end{align}
+
+\subsection{Résultats expérimentaux}
+
+Tests sur 1 million d'additions de 0.1f :
+\begin{itemize}
+\item \texttt{std::accumulate} : 100011.55 (erreur 11.55)
+\item Kahan : 100000.00 (exact)
+\end{itemize}
+
+Variance sur $[10^8, 10^8, 1.0, 2.0]$ :
+\begin{itemize}
+\item Naïve : peut être négative
+\item Welford : stable
+\end{itemize}
+\newpage
+
+\section{Vecteurs et Algèbre Linéaire}
+
+\subsection{Vec2d : Vecteurs 2D}
+
+Implémentation avec opérateurs arithmétiques, accès par index et fonctions utilitaires.
+
+\subsubsection{Produit scalaire}
+\[
+\mathbf{a} \cdot \mathbf{b} = a_x b_x + a_y b_y
+\]
+
+\subsubsection{Produit vectoriel 2D}
+\[
+\mathbf{a} \times \mathbf{b} = a_x b_y - a_y b_x
+\]
+
+Produit l'aire orientée du parallélogramme.
+
+\subsubsection{Normalisation}
+\[
+\mathbf{\hat{u}} = \frac{\mathbf{u}}{||\mathbf{u}||}, \quad ||\mathbf{u}|| = \sqrt{u_x^2 + u_y^2}
+\]
+
+\subsection{Vec3d : Vecteurs 3D}
+
+Extension à 3 dimensions avec produit vectoriel 3D.
+
+\subsubsection{Produit vectoriel 3D}
+\[
+\mathbf{a} \times \mathbf{b} = 
+\begin{pmatrix}
+a_y b_z - a_z b_y \\
+a_z b_x - a_x b_z \\
+a_x b_y - a_y b_x
+\end{pmatrix}
+\]
+
+Suit la règle de la main droite.
+
+\subsubsection{Orthogonalisation de Gram-Schmidt}
+
+Construction d'une base orthonormée à partir de trois vecteurs :
+\begin{align}
+\mathbf{u}_1 &= \frac{\mathbf{a}}{||\mathbf{a}||} \\
+\mathbf{v}_1 &= \mathbf{b} - \mathrm{proj}_{\mathbf{u}_1}(\mathbf{b}) \\
+\mathbf{u}_2 &= \frac{\mathbf{v}_1}{||\mathbf{v}_1||} \\
+\mathbf{v}_2 &= \mathbf{c} - \mathrm{proj}_{\mathbf{u}_1}(\mathbf{c}) - \mathrm{proj}_{\mathbf{u}_2}(\mathbf{c}) \\
+\mathbf{u}_3 &= \frac{\mathbf{v}_2}{||\mathbf{v}_2||}
+\end{align}
+
+où $\mathrm{proj}_{\mathbf{u}}(\mathbf{v}) = (\mathbf{v} \cdot \mathbf{u}) \mathbf{u}$.
+
+\subsubsection{Rejet orthogonal}
+\[
+\mathrm{rej}_{\mathbf{u}}(\mathbf{v}) = \mathbf{v} - \mathrm{proj}_{\mathbf{u}}(\mathbf{v})
+\]
+
+\subsection{Vec4d : Coordonnées homogènes}
+
+Utilisé pour les transformations affines. Le quatrième composant $w$ permet les translations.
+
+\subsubsection{Projection perspective simple}
+
+Pour un point 3D $(X, Y, Z)$, projection 2D :
+\[
+u = f \frac{X}{Z}, \quad v = f \frac{Y}{Z}
+\]
+
+avec $f$ le champ de vision.
+
+
+\newpage
+
+\section{Matrices et Transformations}
+
+\subsection{Matrices 4x4 homogènes}
+
+Les matrices 4x4 représentent les transformations affines 3D :
+\[
+\begin{pmatrix}
+\mathbf{R} & \mathbf{t} \\
+\mathbf{0} & 1
+\end{pmatrix}
+\]
+où $\mathbf{R}$ est la rotation 3x3, $\mathbf{t}$ la translation.
+
+\subsubsection{TRS : Translation-Rotation-Scale}
+
+Composition des transformations :
+\[
+M = T \cdot R \cdot S
+\]
+
+\subsubsection{Décomposition TRS}
+
+Extraction des paramètres :
+\begin{itemize}
+\item Translation : colonne 4 de $M$
+\item Scale : normes des colonnes de $\mathbf{R}$
+\item Rotation : normalisation des colonnes
+\end{itemize}
+
+\subsubsection{Inversion de matrice}
+
+Utilisation de l'algorithme de Gauss-Jordan avec pivot partiel. Testé sur matrices aléatoires et singulières.
+
+\subsubsection{Caméra LookAt}
+
+Matrice de vue à partir de eye, target, up :
+\begin{align}
+\mathbf{z} &= \mathrm{normalize}(\mathrm{eye} - \mathrm{target}) \\
+\mathbf{x} &= \mathrm{normalize}(\mathrm{up} \times \mathbf{z}) \\
+\mathbf{y} &= \mathbf{z} \times \mathbf{x}
+\end{align}
+
+\subsubsection{Projection perspective}
+
+Matrice de projection :
+\[
+P = \begin{pmatrix}
+\frac{f}{\mathrm{aspect}} & 0 & 0 & 0 \\
+0 & f & 0 & 0 \\
+0 & 0 & \frac{\mathrm{far+near}}{\mathrm{near-far}} & \frac{2\cdot\mathrm{far}\cdot\mathrm{near}}{\mathrm{near-far}} \\
+0 & 0 & -1 & 0
+\end{pmatrix}
+\]
+avec $f = \frac{1}{\tan(\theta/2)}$ et $\theta$ le FOV vertical.
+
+
+\newpage
+
+\section{Rasterisation Logicielle}
+
+\subsection{Pipeline graphique}
+
+Le pipeline implémenté comprend :
+\begin{enumerate}
+\item Transformation modèle (objet local vers monde)
+\item Transformation vue (monde vers caméra)
+\item Projection (caméra vers écran)
+\item Passage en coordonnées écran (NDC vers pixels)
+\end{enumerate}
+
+\subsubsection{Transformation complète}
+\[
+\mathbf{p}_{screen} = P \cdot V \cdot M \cdot \mathbf{p}_{local}
+\]
+
+\subsubsection{Cube unitaire}
+
+Définition des 8 sommets et 12 arêtes d'un cube centré en $(0,0,0)$.
+
+\subsubsection{Dessin d'arêtes}
+
+Utilisation de l'algorithme de Bresenham pour tracer les lignes entre sommets projetés.
+
+\subsubsection{Format PPM}
+
+Sauvegarde au format binaire P6 :
+\begin{verbatim}
+P6
+width height
+255
+<data>
+\end{verbatim}
+
+\subsubsection{Animation}
+
+Rotation autour de l'axe Y :
+\[
+R_y(\theta) = \begin{pmatrix}
+\cos\theta & 0 & \sin\theta & 0 \\
+0 & 1 & 0 & 0 \\
+-\sin\theta & 0 & \cos\theta & 0 \\
+0 & 0 & 0 & 1
+\end{pmatrix}
+\]
+
+Génération de 10 frames pour simuler une rotation complète.
+
+\subsection{Tests}
+
+Nous avons implémenté plus de 40 tests couvrant :
+\begin{itemize}
+\item précision numérique
+\item opérations vectorielles
+\item matrices et inverses
+\item pipeline graphique
+\end{itemize}
+
+
+\newpage
+
+\section{Quaternions et Animation}
+
+\subsection{Représentation des quaternions}
+
+Un quaternion représente une rotation 3D :
+\[
+\mathbf{q} = w + x\mathbf{i} + y\mathbf{j} + z\mathbf{k}
+\]
+
+avec $w^2 + x^2 + y^2 + z^2 = 1$ pour les quaternions unitaires.
+
+\subsubsection{Rotation d'un vecteur}
+\[
+\mathbf{v}' = \mathbf{q} \mathbf{v} \mathbf{q}^{-1}
+\]
+
+\subsubsection{Conversion Quaternion vers Matrice 3x3}
+
+La matrice de rotation correspondante :
+\[
+R = \begin{pmatrix}
+1-2y^2-2z^2 & 2xy-2wz & 2xz+2wy \\
+2xy+2wz & 1-2x^2-2z^2 & 2yz-2wx \\
+2xz-2wy & 2yz+2wx & 1-2x^2-2y^2
+\end{pmatrix}
+\]
+
+\subsubsection{Aller-retour Quat ↔ Mat3}
+
+Testé sur 50 cas aléatoires pour vérifier la stabilité numérique.
+
+\subsubsection{Inverse et identité}
+
+Pour un quaternion unitaire : $\mathbf{q}^{-1} = \overline{\mathbf{q}} = (w, -x, -y, -z)$
+
+Vérification : $\mathbf{q} \cdot \mathbf{q}^{-1} = 1$
+
+\subsection{Interpolation sphérique (SLERP)}
+
+\subsubsection{SLERP vs LERP}
+
+LERP : interpolation linéaire dans l'espace des quaternions (vitesse angulaire non constante)
+
+SLERP : interpolation sur le grand cercle (vitesse angulaire constante)
+
+\subsubsection{Formule SLERP}
+\[
+\mathrm{slerp}(\mathbf{q}_1, \mathbf{q}_2, t) = \frac{\sin((1-t)\theta)}{\sin\theta} \mathbf{q}_1 + \frac{\sin(t\theta)}{\sin\theta} \mathbf{q}_2
+\]
+
+avec $\cos\theta = \mathbf{q}_1 \cdot \mathbf{q}_2$
+
+\subsubsection{Animation}
+
+Interpolation entre deux orientations sur 60 frames, avec rendu du cube en rotation.
+
+
+\newpage
+
+\section{Tests et Validation}
+
+Le fichier \texttt{TestsDesTPs.cpp} contient 11 suites de tests couvrant l'ensemble des fonctionnalités implémentées :
+
+\begin{itemize}
+\item \textbf{TP1} : Inspection des flottants IEEE 754 (\texttt{inspectFloat})
+\item \textbf{TP2} : Problèmes de précision (somme Kahan, variance Welford, epsilon machine)
+\item \textbf{TP3} : Fonctions utilitaires sur flottants (33 tests : isFiniteValid, nearlyZero, approxEq, kahanSum)
+\item \textbf{TP4} : Vec2d complet (20 tests : dot product, cross product 2D, normalisation, accès index)
+\item \textbf{TP5} : Vec3d et Gram-Schmidt (16 tests : cross product 3D, orthogonalisation sur 10 triplets aléatoires)
+\item \textbf{TP6} : Projection perspective Vec4d (rendu d'un cube avec sommets projetés)
+\item \textbf{TP7} : Mat4d et inversion (10 tests sur matrices aléatoires, test de singularité)
+\item \textbf{TP8} : Rasterisation cube en rotation (10 frames d'animation)
+\item \textbf{TP9} : Décomposition TRS (20 tests sur matrices aléatoires)
+\item \textbf{TP10} : Quaternions (50 tests aller-retour Quat↔Mat3, 50 tests d'inverse)
+\item \textbf{TP11} : Animation SLERP (60 frames avec SLERP et LERP pour comparaison)
+\end{itemize}
+
+\section{Conclusion}
+
+Ce projet a permis de construire les fondations mathématiques essentielles pour un moteur de réalité augmentée from scratch. Les principales réalisations incluent :
+
+\begin{itemize}
+\item Une analyse approfondie de la précision numérique IEEE 754 et des algorithmes stables (Kahan, Welford)
+\item L'implémentation rigoureuse de structures vectorielles (Vec2d, Vec3d, Vec4d) avec algèbre linéaire complète
+\item Les matrices 4x4 avec inversion numérique et décomposition TRS
+\item Un pipeline de rasterisation logiciel incluant projection perspective et animation
+\item Les quaternions avec interpolation SLERP pour l'animation fluide
+\end{itemize}
+
+L'ensemble est validé par plus de 40 tests unitaires couvrant les cas limites et la robustesse numérique. Cette bibliothèque NkMath constitue une base solide pour les modules suivants (SVD, traitement d'image, calibration caméra).
+
+Ce projet a permis de construire les fondations mathématiques essentielles pour un moteur de réalité augmentée from scratch. Les principales réalisations incluent :
+
+\begin{itemize}
+\item Une analyse approfondie de la précision numérique IEEE 754 et des algorithmes stables (Kahan, Welford)
+\item L'implémentation rigoureuse de structures vectorielles (Vec2d, Vec3d, Vec4d) avec algèbre linéaire complète
+\item Les matrices 4x4 avec inversion numérique et décomposition TRS
+\item Un pipeline de rasterisation logiciel incluant projection perspective et animation
+\item Les quaternions avec interpolation SLERP pour l'animation fluide
+\end{itemize}
+
+L'ensemble est validé par plus de 40 tests unitaires couvrant les cas limites et la robustesse numérique. Cette bibliothèque NkMath constitue une base solide pour les modules suivants (SVD, traitement d'image, calibration caméra).
+
+\end{document}
